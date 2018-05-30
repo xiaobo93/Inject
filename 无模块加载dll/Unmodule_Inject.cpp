@@ -12,9 +12,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	//确定目标进程是多少位数
 
 	//HMODULE h = LoadLibraryA("C:\\Users\\storm\\Desktop\\Desktop\\Desktop\\Unmodule_Inject\\Debug\\Dll1.dll");
-	char szFileName[] = "C:\\Users\\storm\\Desktop\\Desktop\\Desktop\\Unmodule_Inject\\Debug\\Dll1.dll";
+	char szFileName[] = "C:\\DllTest.dll";
 	//char szFileName[] ="C:\\Users\\storm\\Desktop\\Desktop\\Desktop\\Unmodule_Inject\\x64\\Debug\\Dll1.dll";
-	DWORD dwProcessId = 8752;
+	DWORD dwProcessId = 5572;
 
 	HANDLE hFile = CreateFileA(szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	if(hFile != INVALID_HANDLE_VALUE)
@@ -28,9 +28,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			{
 				HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwProcessId);
 				//ModuleLessInject(hProcess, buffer, filesize, NULL, NULL, NULL);
-				//Wow64ModuleLessInjectToX64(hProcess, buffer, filesize, NULL, NULL, NULL);
+				Wow64ModuleLessInjectToX64(hProcess, buffer, filesize, NULL, NULL, NULL);
 
-				X64ModuleLessInjectToWow64(hProcess, buffer, filesize, NULL, NULL, NULL);
+				//X64ModuleLessInjectToWow64(hProcess, buffer, filesize, NULL, NULL, NULL);
 			}
 		}
 	}

@@ -144,7 +144,6 @@ unsigned char g_shellcode_x64[SHELL_CODE_SIZE_X64] = "\x48\x89\x4C\x24\x08\x48\x
 	//************************************
 	// 函数名称:    Wow64ModuleLessInjectToX64
 	// 函数说明：	32位进程注入64位进程
-	// 作    者：	刘二表
 	// 生成日期：	2017/08/30
 	// 参    数：	HANDLE hProcess	要注入进程的ID
 	// 参    数：	PVOID lpFileBase	DLL文件加载到内存基址
@@ -154,10 +153,7 @@ unsigned char g_shellcode_x64[SHELL_CODE_SIZE_X64] = "\x48\x89\x4C\x24\x08\x48\x
 	// 参    数：	LPCTSTR * szRunCmd	传递给导出函数的参数
 	// 返 回 值：	BOOL	注入成功返回TRUE，否则返回FALSE
 	//************************************
-#ifndef _WIN64
-
-
-
+#ifndef _WIN64     //如果没有定义_WIN64   64位编译，定义了。32位编译，没有定义。
 	BOOL Wow64ModuleLessInjectToX64(HANDLE hProcess, PVOID lpFileBase, SIZE_T ImageSize, LPCTSTR szReserved, LPCSTR szProcName, LPCTSTR szRunCmd)
 	{
 		SIZE_T				NumberOfByteWritten = 0;
@@ -178,6 +174,7 @@ unsigned char g_shellcode_x64[SHELL_CODE_SIZE_X64] = "\x48\x89\x4C\x24\x08\x48\x
 		lpFileMem = VirtualAllocEx64(hProcess, NULL, ImageSize, MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 		if (lpFileMem == NULL)
 		{
+			OutputDebugStringA("gxb  VirtualAllocEx64  ImageSize  failed \r\n");
 			goto FREEANDRETURN;
 		}
 		if (WriteProcessMemory64(hProcess, lpFileMem, lpFileBase, ImageSize, &NumberOfByteWritten) == FALSE)
@@ -238,6 +235,7 @@ unsigned char g_shellcode_x64[SHELL_CODE_SIZE_X64] = "\x48\x89\x4C\x24\x08\x48\x
 			|| WriteProcessMemory64(hProcess, (DWORD64)((BYTE*)lpShellCodeParam + sizeof(DWORD64)*2), (LPVOID)&lpProcName, sizeof(DWORD64), &NumberOfByteWritten) == FALSE
 			|| WriteProcessMemory64(hProcess, (DWORD64)((BYTE*)lpShellCodeParam + sizeof(DWORD64)*3), (LPVOID)&lpRunCmd, sizeof(DWORD64), &NumberOfByteWritten) == FALSE)
 		{
+			OutputDebugStringA("gxb  WriteProcessMemory64   lpShellCodeParam failed\r\n");
 			goto FREEANDRETURN;
 		}
 

@@ -23,7 +23,7 @@
 #include <Windows.h>
 
 #ifndef _WIN64
-#include <cstddef>
+#include <stddef.h>
 #include <Shlwapi.h>
 #include "internal.h"
 #include "wow64ext.h"
@@ -67,15 +67,9 @@ int _mywcsicmp(const wchar_t *string1, const wchar_t *string2)
     // conversion to QWORD for easier use in inline assembly
     reg64 _argC = { (DWORD64)argC };
     DWORD back_esp = 0;
-    WORD back_fs = 0;
 
     __asm
     {
-        ;// reset FS segment, to properly handle RFG
-        mov    back_fs, fs
-        mov    eax, 0x2B
-        mov    fs, ax
-
         ;// keep original esp in back_esp variable
         mov    back_esp, esp
         
@@ -141,13 +135,9 @@ _ls_e:                                                  ;//
 
         X64_End();
 
-        mov    ax, ds
-        mov    ss, ax
+		mov    ax, ds
+		mov    ss, ax
         mov    esp, back_esp
-
-        ;// restore FS segment
-        mov    ax, back_fs
-        mov    fs, ax
     }
     return _rax.v;
 }
@@ -201,61 +191,61 @@ _move_0:                            ;//
     }
 }
 
-bool cmpMem64(void* dstMem, DWORD64 srcMem, size_t sz)
-{
-    if ((nullptr == dstMem) || (0 == srcMem) || (0 == sz))
-        return false;
-
-    bool result = false;
-    reg64 _src = { srcMem };
-    __asm
-    {
-        X64_Start();
-
-        ;// below code is compiled as x86 inline asm, but it is executed as x64 code
-        ;// that's why it need sometimes REX_W() macro, right column contains detailed
-        ;// transcription how it will be interpreted by CPU
-
-        push   edi                  ;// push      rdi
-        push   esi                  ;// push      rsi
-                                    ;//           
-        mov    edi, dstMem          ;// mov       edi, dword ptr [dstMem]       ; high part of RDI is zeroed
-  REX_W mov    esi, _src.dw[0]      ;// mov       rsi, qword ptr [_src]
-        mov    ecx, sz              ;// mov       ecx, dword ptr [sz]           ; high part of RCX is zeroed
-                                    ;//           
-        mov    eax, ecx             ;// mov       eax, ecx
-        and    eax, 3               ;// and       eax, 3
-        shr    ecx, 2               ;// shr       ecx, 2
-                                    ;// 
-        repe   cmpsd                ;// repe cmps dword ptr [rsi], dword ptr [rdi]
-        jnz     _ret_false          ;// jnz       _ret_false
-                                    ;// 
-        test   eax, eax             ;// test      eax, eax
-        je     _move_0              ;// je        _move_0
-        cmp    eax, 1               ;// cmp       eax, 1
-        je     _move_1              ;// je        _move_1
-                                    ;// 
-        cmpsw                       ;// cmps      word ptr [rsi], word ptr [rdi]
-        jnz     _ret_false          ;// jnz       _ret_false
-        cmp    eax, 2               ;// cmp       eax, 2
-        je     _move_0              ;// je        _move_0
-                                    ;// 
-_move_1:                            ;// 
-        cmpsb                       ;// cmps      byte ptr [rsi], byte ptr [rdi]
-        jnz     _ret_false          ;// jnz       _ret_false
-                                    ;// 
-_move_0:                            ;// 
-        mov    result, 1            ;// mov       byte ptr [result], 1
-                                    ;// 
-_ret_false:                         ;// 
-        pop    esi                  ;// pop      rsi
-        pop    edi                  ;// pop      rdi
-
-        X64_End();
-    }
-
-    return result;
-}
+//bool cmpMem64(void* dstMem, DWORD64 srcMem, size_t sz)
+//{
+//    if ((nullptr == dstMem) || (0 == srcMem) || (0 == sz))
+//        return false;
+//
+//    bool result = false;
+//    reg64 _src = { srcMem };
+//    __asm
+//    {
+//        X64_Start();
+//
+//        ;// below code is compiled as x86 inline asm, but it is executed as x64 code
+//        ;// that's why it need sometimes REX_W() macro, right column contains detailed
+//        ;// transcription how it will be interpreted by CPU
+//
+//        push   edi                  ;// push      rdi
+//        push   esi                  ;// push      rsi
+//                                    ;//           
+//        mov    edi, dstMem          ;// mov       edi, dword ptr [dstMem]       ; high part of RDI is zeroed
+//  REX_W mov    esi, _src.dw[0]      ;// mov       rsi, qword ptr [_src]
+//        mov    ecx, sz              ;// mov       ecx, dword ptr [sz]           ; high part of RCX is zeroed
+//                                    ;//           
+//        mov    eax, ecx             ;// mov       eax, ecx
+//        and    eax, 3               ;// and       eax, 3
+//        shr    ecx, 2               ;// shr       ecx, 2
+//                                    ;// 
+//        repe   cmpsd                ;// repe cmps dword ptr [rsi], dword ptr [rdi]
+//        jnz     _ret_false          ;// jnz       _ret_false
+//                                    ;// 
+//        test   eax, eax             ;// test      eax, eax
+//        je     _move_0              ;// je        _move_0
+//        cmp    eax, 1               ;// cmp       eax, 1
+//        je     _move_1              ;// je        _move_1
+//                                    ;// 
+//        cmpsw                       ;// cmps      word ptr [rsi], word ptr [rdi]
+//        jnz     _ret_false          ;// jnz       _ret_false
+//        cmp    eax, 2               ;// cmp       eax, 2
+//        je     _move_0              ;// je        _move_0
+//                                    ;// 
+//_move_1:                            ;// 
+//        cmpsb                       ;// cmps      byte ptr [rsi], byte ptr [rdi]
+//        jnz     _ret_false          ;// jnz       _ret_false
+//                                    ;// 
+//_move_0:                            ;// 
+//        mov    result, 1            ;// mov       byte ptr [result], 1
+//                                    ;// 
+//_ret_false:                         ;// 
+//        pop    esi                  ;// pop      rsi
+//        pop    edi                  ;// pop      rdi
+//
+//        X64_End();
+//    }
+//
+//    return result;
+//}
 
 DWORD64 getTEB64()
 {
@@ -322,23 +312,23 @@ DWORD64 getNTDLL64()
 
 DWORD64 getLdrGetProcedureAddress()
 {
-    DWORD64 modBase = getNTDLL64();
+	DWORD64 modBase = getNTDLL64();
 	if (0 == modBase)
 		return 0;
-    
-    IMAGE_DOS_HEADER idh;
-    getMem64(&idh, modBase, sizeof(idh));
 
-    IMAGE_NT_HEADERS64 inh;
-    getMem64(&inh, modBase + idh.e_lfanew, sizeof(IMAGE_NT_HEADERS64));
-    
-    IMAGE_DATA_DIRECTORY& idd = inh.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
-    
-    if (0 == idd.VirtualAddress)
-        return 0;
+	IMAGE_DOS_HEADER idh;
+	getMem64(&idh, modBase, sizeof(idh));
 
-    IMAGE_EXPORT_DIRECTORY ied;
-    getMem64(&ied, modBase + idd.VirtualAddress, sizeof(ied));
+	IMAGE_NT_HEADERS64 inh;
+	getMem64(&inh, modBase + idh.e_lfanew, sizeof(IMAGE_NT_HEADERS64));
+
+	IMAGE_DATA_DIRECTORY& idd = inh.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+
+	if (0 == idd.VirtualAddress)
+		return 0;
+
+	IMAGE_EXPORT_DIRECTORY ied;
+	getMem64(&ied, modBase + idd.VirtualAddress, sizeof(ied));
 
 	DWORD* rvaTable = (DWORD*)malloc(sizeof(DWORD)*ied.NumberOfFunctions);
 	if (nullptr == rvaTable)
@@ -366,15 +356,23 @@ DWORD64 getLdrGetProcedureAddress()
 	memset(nameTable, 0, sizeof(DWORD)*ied.NumberOfNames);
 	getMem64(nameTable, modBase + ied.AddressOfNames, sizeof(DWORD)*ied.NumberOfNames);
 
-	DWORD64 dw64 = 0; size_t size_fun = sizeof("LdrGetProcedureAddress");
+	DWORD64 dw64 = 0;
 	// lazy search, there is no need to use binsearch for just one function
+	int nLdrGetProcedureAddressSize = strlen("LdrGetProcedureAddress");
 	for (DWORD i = 0; i < ied.NumberOfFunctions; i++)
 	{
-		if (!cmpMem64("LdrGetProcedureAddress", modBase + nameTable[i], size_fun)) {
+		char * pTmp = (char *)(modBase + nameTable[i]);
+		BOOL bIsBadStringPtr = IsBadStringPtrA(pTmp, nLdrGetProcedureAddressSize);
+		if (bIsBadStringPtr) {
 			continue;
-		} else {
-			dw64 = modBase + rvaTable[ordTable[i]];
-			break;
+		}
+
+		int nTmpLen = strlen(pTmp);
+		if (nLdrGetProcedureAddressSize == nTmpLen) {
+			if (StrStrIA(pTmp, "LdrGetProcedureAddress") != NULL) {
+				dw64 = modBase + rvaTable[ordTable[i]];
+				break;
+			}
 		}
 	}
 

@@ -1,6 +1,6 @@
 #pragma once
 #include"stdafx.h"
-
+#include <Windows.h>
 typedef struct _SHELL_CODE_PARAM
 {
 	PVOID lpFileBase;

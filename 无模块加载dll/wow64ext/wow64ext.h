@@ -247,12 +247,11 @@ typedef _PEB_LDR_DATA_T<DWORD64> PEB_LDR_DATA64;
 
 typedef _PEB_T<DWORD, DWORD64, 34> PEB32;
 typedef _PEB_T<DWORD64, DWORD, 30> PEB64;
-/*
+
 typedef struct DECLSPEC_ALIGN(16) _M128A {
 	ULONGLONG Low;
 	LONGLONG High;
 } M128A, *PM128A;
-*/
 
 #define nullptr			NULL
 
